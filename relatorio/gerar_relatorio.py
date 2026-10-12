@@ -151,6 +151,9 @@ tab_modelos = tabela(
 tab_fontes_ext = tabela(['Features usadas', 'Quantidade', 'F1 (CV)', 'Desvio (CV)', 'ROC AUC (CV)'],
                         [(f['features usadas'], f['quantidade'], dec(f['cv_f1']), dec(f['cv_f1_desvio']), dec(f['cv_roc_auc']))
                          for f in fontes_ext], 'num')
+cortes = [l.split()[1:] for l in saida(nb_final, 'cortes = pd.DataFrame')[1:]]
+tab_cortes = tabela(['Corte', 'Accuracy', 'Precision', 'Recall', 'F1', 'Acionados'],
+                    [(dec(c[0], 1), *(dec(v) for v in c[1:5]), c[5]) for c in cortes], 'num')
 tab_fontes = tabela(['#', 'Fonte', 'Formato', 'Conteúdo', 'Origem'], [
     (1, 'Sistema de vendas', 'CSV', 'uma linha por compra', 'fictícia, semente fixa'),
     (2, 'CRM', 'Excel', 'cadastro de clientes', 'fictícia, semente fixa'),
@@ -316,7 +319,7 @@ quantos churns o modelo encontra, precision mede quantos alertas estão certos e
 sobe de uma faixa para a outra, sinal de que o modelo ordena bem.</p>
 {pre(trecho(PG, '8. Taxa real de churn', n=8)[1:])}
 <p><b>Ponto de corte.</b> Baixar o corte encontra mais churns ao custo de mais alarmes falsos.</p>
-{pre(saida(nb_final, "cortes = pd.DataFrame"), larga=True)}</div>
+{tab_cortes}</div>
 </div>
 <p><b>O que as fontes externas acrescentam.</b> O modelo escolhido foi treinado de novo sem as features de localidade
 e comparado na validação cruzada:</p>
