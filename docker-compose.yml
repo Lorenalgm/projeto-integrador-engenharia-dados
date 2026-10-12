@@ -1,0 +1,23 @@
+# PostgreSQL para quem não tem um instalado. Depois de subir, aponte o pipeline para ele:
+#   docker compose up -d
+#   export DATABASE_URL=postgresql+psycopg2://aluno:aluno@localhost:5433/projeto_integrador
+services:
+  postgres:
+    image: postgres:16
+    container_name: projeto_integrador_pg
+    environment:
+      POSTGRES_USER: aluno
+      POSTGRES_PASSWORD: aluno
+      POSTGRES_DB: projeto_integrador
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aluno -d projeto_integrador"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
