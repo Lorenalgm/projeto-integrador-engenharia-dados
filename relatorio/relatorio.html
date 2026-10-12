@@ -21,6 +21,9 @@ table.num td:not(:first-child), table.num th:not(:first-child) { text-align: rig
 table.etapas td:nth-child(2), table.etapas th:nth-child(2) { text-align: left; }
 table.etapas td:last-child, table.etapas th:last-child { text-align: left; width: 46%; }
 table.doc { font-size: 7.6pt; }
+table.mini { font-size: 7.2pt; }
+table.mini th { font-size: 6.8pt; padding: 2pt 3pt; }
+table.mini td { padding: 2pt 3pt; }
 table.doc code { font-size: 7pt; }
 figure { margin: 6pt auto 8pt; break-inside: avoid; }
 figure img { width: 100%; display: block; }
@@ -185,7 +188,7 @@ Foreign-key constraints:
     &quot;fato_compras_data_compra_fkey&quot; FOREIGN KEY (data_compra) REFERENCES dw.dim_data(data)
     &quot;fato_compras_produto_id_fkey&quot; FOREIGN KEY (produto_id) REFERENCES dw.dim_produto(produto_id)</pre></div>
 </div>
-
+<figure style="width:58%"><div class="shot"><img src="../evidencias/prints/print_psql_verificacao.png"></div><figcaption>Terminal: psql executando sql/verificacao.sql no banco projeto_integrador.</figcaption></figure>
 <p>As consultas de <code>sql/verificacao.sql</code> conferem a carga. Linhas por tabela, qualidade do fato (tudo zero) e as
 chaves estrangeiras lidas do catálogo do PostgreSQL:</p>
 <div class="lado">
@@ -278,7 +281,7 @@ próprio banco contagens, receita e junções.</li>
 2026-10-11 23:05:50 | INFO    | load      | dw.dim_data              |    545 linhas
 2026-10-11 23:05:51 | INFO    | load      | dw.fato_compras          |  16092 linhas
 2026-10-11 23:05:51 | INFO    | verify    | contagens, receita (R$ 9398980.77) e junções conferidas no PostgreSQL</pre>
-
+<figure style="width:88%"><div class="shot"><img src="../evidencias/prints/print_terminal_pipeline.png"></div><figcaption>Terminal: execução completa do pipeline.</figcaption></figure>
 <p>As regras de limpeza têm testes automatizados (<code>tests/test_transform.py</code>), que rodam sem banco e sem rede:</p>
 <pre class='larga'>$ python -m pytest -v
 tests/test_transform.py::test_para_numero_aceita_formato_brasileiro PASSED [  9%]
@@ -355,7 +358,7 @@ sobe de uma faixa para a outra, sinal de que o modelo ordena bem.</p>
  alto  |       35 |          24 |          68.6
 (3 rows)</pre>
 <p><b>Ponto de corte.</b> Baixar o corte encontra mais churns ao custo de mais alarmes falsos.</p>
-<table class="num"><thead><tr><th>Corte</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1</th><th>Acionados</th></tr></thead><tbody><tr><td>0,3</td><td>0,620</td><td>0,439</td><td>0,806</td><td>0,568</td><td>114</td></tr><tr><td>0,4</td><td>0,715</td><td>0,529</td><td>0,726</td><td>0,612</td><td>85</td></tr><tr><td>0,5</td><td>0,785</td><td>0,656</td><td>0,645</td><td>0,650</td><td>61</td></tr><tr><td>0,6</td><td>0,775</td><td>0,673</td><td>0,532</td><td>0,595</td><td>49</td></tr><tr><td>0,7</td><td>0,755</td><td>0,686</td><td>0,387</td><td>0,495</td><td>35</td></tr></tbody></table></div>
+<table class="num mini"><thead><tr><th>Corte</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1</th><th>Acionados</th></tr></thead><tbody><tr><td>0,3</td><td>0,620</td><td>0,439</td><td>0,806</td><td>0,568</td><td>114</td></tr><tr><td>0,4</td><td>0,715</td><td>0,529</td><td>0,726</td><td>0,612</td><td>85</td></tr><tr><td>0,5</td><td>0,785</td><td>0,656</td><td>0,645</td><td>0,650</td><td>61</td></tr><tr><td>0,6</td><td>0,775</td><td>0,673</td><td>0,532</td><td>0,595</td><td>49</td></tr><tr><td>0,7</td><td>0,755</td><td>0,686</td><td>0,387</td><td>0,495</td><td>35</td></tr></tbody></table></div>
 </div>
 <p><b>O que as fontes externas acrescentam.</b> O modelo escolhido foi treinado de novo sem as features de localidade
 e comparado na validação cruzada:</p>
@@ -407,9 +410,10 @@ d2076d4 docs: adiciona as evidências de execução do pipeline
 f070ef3 docs: adiciona o relatório em PDF, os prints e os notebooks em HTML
 053ab9b chore: fixa as versões das dependências para reprodução
 a23a31f docs: reescreve o README de forma direta e com sumário
-c9d7466 docs: remove a menção de autoria do notebook final</pre>
-
-<figure style="width:72%"><div class="shot"><img src="../evidencias/prints/notebook_final_inicio.png"></div><figcaption>Início do notebook final (exportado em evidencias/notebooks_html/).</figcaption></figure>
+c9d7466 docs: remove a menção de autoria do notebook final
+c912a3a docs: atualiza o relatório, os prints e os notebooks em HTML
+5e593f8 fix: troca o diagrama de fluxo do notebook final por uma tabela</pre>
+<figure style="width:88%"><div class="shot"><img src="../evidencias/prints/print_jupyter_notebook_final.png"></div><figcaption>JupyterLab com o notebook final executado.</figcaption></figure>
 
 <h2>Checklist da entrega</h2>
 <table class="curta"><thead><tr><th>Item do checklist</th><th>Onde está</th></tr></thead><tbody><tr><td>Pelo menos 2 fontes de dados</td><td>Cinco fontes: <code>data/raw/</code>, <code>src/extract.py</code> (seção 1)</td></tr><tr><td>Dados armazenados e modelados no PostgreSQL</td><td><code>sql/schema.sql</code>, schemas <code>staging</code>, <code>dw</code> e <code>ml</code> (seção 2)</td></tr><tr><td>Processo ETL em Python</td><td><code>src/extract.py</code>, <code>src/transform.py</code>, <code>src/load.py</code>, <code>src/pipeline.py</code> (seção 3)</td></tr><tr><td>Features preparadas e documentadas</td><td><code>src/features.py</code>, <code>reports/documentacao_features.csv</code> (seção 5)</td></tr><tr><td>Modelo de classificação treinado</td><td><code>src/model.py</code>, <code>models/modelo_churn.pkl</code> (seção 6)</td></tr><tr><td>Métricas do modelo apresentadas</td><td><code>reports/metricas.json</code>, <code>reports/comparacao_modelos.csv</code>, tabela <code>ml.metricas_modelo</code> (seções 6 e 7)</td></tr><tr><td>Notebook de análise exploratória</td><td><code>notebooks/01_analise_exploratoria.ipynb</code> (seção 4)</td></tr><tr><td>README com instruções claras</td><td><code>README.md</code></td></tr><tr><td>Repositório Git acessível</td><td>https://github.com/Lorenalgm/projeto-integrador-engenharia-dados (público, seção 8)</td></tr><tr><td>Notebook final (.ipynb)</td><td><code>notebooks/02_projeto_integrador.ipynb</code></td></tr></tbody></table>

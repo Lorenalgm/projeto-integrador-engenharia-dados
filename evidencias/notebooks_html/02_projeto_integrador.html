@@ -7807,11 +7807,30 @@ a.anchor-link {
 (cupom, contato, frete grátis). É um problema de <strong>classificação</strong>: para cada cliente ativo, prever se ele dará
 churn nos próximos 90 dias.</p>
 <p><strong>Fluxo.</strong> Este notebook executa o pipeline de ponta a ponta, chamando os módulos de <code>src/</code>:</p>
-<pre><code>Fontes de dados  -&gt;  PostgreSQL  -&gt;  ETL Python  -&gt;  Features  -&gt;  Machine Learning  -&gt;  Métricas  -&gt;  Resultados
- CSV, Excel, JSON     staging         extract          29 por         3 modelos +         F1, recall,    modelo .pkl e
- API IBGE, Kaggle     dw (estrela)    transform        cliente        baseline            ROC AUC        tabelas em ml
-                      ml              load
-</code></pre>
+<table>
+<thead>
+<tr>
+<th>Fontes de dados</th>
+<th>PostgreSQL</th>
+<th>ETL Python</th>
+<th>Features</th>
+<th>Machine Learning</th>
+<th>Métricas</th>
+<th>Resultados</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CSV, Excel, JSON, API IBGE, Kaggle</td>
+<td>staging, dw (estrela), ml</td>
+<td>extract, transform, load</td>
+<td>29 por cliente</td>
+<td>3 modelos + baseline</td>
+<td>F1, recall, ROC AUC</td>
+<td>modelo .pkl e tabelas em ml</td>
+</tr>
+</tbody>
+</table>
 <p>O mesmo fluxo roda pelo terminal com <code>python -m src.pipeline</code>. A análise exploratória está em
 <code>01_analise_exploratoria.ipynb</code>.</p>
 <p>Sequência:</p>

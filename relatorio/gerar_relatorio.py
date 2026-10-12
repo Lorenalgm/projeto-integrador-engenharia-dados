@@ -153,7 +153,7 @@ tab_fontes_ext = tabela(['Features usadas', 'Quantidade', 'F1 (CV)', 'Desvio (CV
                          for f in fontes_ext], 'num')
 cortes = [l.split()[1:] for l in saida(nb_final, 'cortes = pd.DataFrame')[1:]]
 tab_cortes = tabela(['Corte', 'Accuracy', 'Precision', 'Recall', 'F1', 'Acionados'],
-                    [(dec(c[0], 1), *(dec(v) for v in c[1:5]), c[5]) for c in cortes], 'num')
+                    [(dec(c[0], 1), *(dec(v) for v in c[1:5]), c[5]) for c in cortes], 'num mini')
 tab_fontes = tabela(['#', 'Fonte', 'Formato', 'Conteúdo', 'Origem'], [
     (1, 'Sistema de vendas', 'CSV', 'uma linha por compra', 'fictícia, semente fixa'),
     (2, 'CRM', 'Excel', 'cadastro de clientes', 'fictícia, semente fixa'),
@@ -231,7 +231,7 @@ porque a cidade é um atributo do cliente, não da compra.</p>
 <div style="width:49%">{pre(trecho(PG, "$ psql -d projeto_integrador -c '\\dt staging.*'", fim="$ psql -d projeto_integrador -c '\\d dw.fato_compras'"))}</div>
 <div style="width:49%">{pre(trecho(PG, "$ psql -d projeto_integrador -c '\\d dw.fato_compras'", fim='$ psql -d projeto_integrador -f'), larga=True)}</div>
 </div>
-{shot('evidencias/prints/print_psql_verificacao.png', 'Terminal: psql executando sql/verificacao.sql no banco projeto_integrador.', 80)}
+{shot('evidencias/prints/print_psql_verificacao.png', 'Terminal: psql executando sql/verificacao.sql no banco projeto_integrador.', 58)}
 <p>As consultas de <code>sql/verificacao.sql</code> conferem a carga. Linhas por tabela, qualidade do fato (tudo zero) e as
 chaves estrangeiras lidas do catálogo do PostgreSQL:</p>
 <div class="lado">
@@ -340,7 +340,6 @@ organização, diagrama do banco, instruções de execução (PostgreSQL local o
 </div>
 {pre(['$ git log --oneline --reverse', *commits], larga=True)}
 {shot('evidencias/prints/print_jupyter_notebook_final.png', 'JupyterLab com o notebook final executado.', 88)}
-{shot('evidencias/prints/notebook_final_inicio.png', 'Início do notebook final (exportado em evidencias/notebooks_html/).', 72)}
 
 <h2>Checklist da entrega</h2>
 {checklist}
@@ -369,6 +368,9 @@ table.num td:not(:first-child), table.num th:not(:first-child) {{ text-align: ri
 table.etapas td:nth-child(2), table.etapas th:nth-child(2) {{ text-align: left; }}
 table.etapas td:last-child, table.etapas th:last-child {{ text-align: left; width: 46%; }}
 table.doc {{ font-size: 7.6pt; }}
+table.mini {{ font-size: 7.2pt; }}
+table.mini th {{ font-size: 6.8pt; padding: 2pt 3pt; }}
+table.mini td {{ padding: 2pt 3pt; }}
 table.doc code {{ font-size: 7pt; }}
 figure {{ margin: 6pt auto 8pt; break-inside: avoid; }}
 figure img {{ width: 100%; display: block; }}

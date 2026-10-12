@@ -24,3 +24,5 @@ f070ef3 docs: adiciona o relatório em PDF, os prints e os notebooks em HTML
 053ab9b chore: fixa as versões das dependências para reprodução
 a23a31f docs: reescreve o README de forma direta e com sumário
 c9d7466 docs: remove a menção de autoria do notebook final
+c912a3a docs: atualiza o relatório, os prints e os notebooks em HTML
+5e593f8 fix: troca o diagrama de fluxo do notebook final por uma tabela
