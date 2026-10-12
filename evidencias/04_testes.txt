@@ -1,0 +1,21 @@
+$ python -m pytest -v
+============================= test session starts ==============================
+platform darwin -- Python 3.12.9, pytest-9.1.1, pluggy-1.6.0 -- /Users/lorena/www/pos-maquina/tarefa7/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/lorena/www/pos-maquina/tarefa7
+plugins: platformdirs-4.13.0, anyio-4.15.1
+collecting ... collected 11 items
+
+tests/test_transform.py::test_para_numero_aceita_formato_brasileiro PASSED [  9%]
+tests/test_transform.py::test_para_data_aceita_dois_formatos_e_rejeita_data_impossivel PASSED [ 18%]
+tests/test_transform.py::test_padronizar_corrige_caixa_e_espacos[  OURO ] PASSED [ 27%]
+tests/test_transform.py::test_padronizar_corrige_caixa_e_espacos[ouro] PASSED [ 36%]
+tests/test_transform.py::test_padronizar_corrige_caixa_e_espacos[Ouro  ] PASSED [ 45%]
+tests/test_transform.py::test_padronizar_ignora_acento_e_anula_o_que_nao_reconhece PASSED [ 54%]
+tests/test_transform.py::test_localidades_juntam_ibge_e_kaggle_por_nome_e_uf PASSED [ 63%]
+tests/test_transform.py::test_localidades_usam_populacao_do_censo_quando_falta_a_estimada_e_anulam_pib_zerado PASSED [ 72%]
+tests/test_transform.py::test_clientes_ficam_com_uma_linha_e_codigo_do_ibge PASSED [ 81%]
+tests/test_transform.py::test_compras_removem_duplicata_invalido_orfao_e_outlier PASSED [ 90%]
+tests/test_transform.py::test_calendario_e_continuo_e_marca_fim_de_semana PASSED [100%]
+
+============================== 11 passed in 0.20s ==============================

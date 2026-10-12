@@ -1,0 +1,156 @@
+$ psql -d projeto_integrador -c '\dn'
+ List of schemas
+  Name   | Owner  
+---------+--------
+ dw      | lorena
+ ml      | lorena
+ public  | lorena
+ staging | lorena
+(4 rows)
+
+$ psql -d projeto_integrador -c '\dt staging.*' -c '\dt dw.*' -c '\dt ml.*'
+             List of relations
+ Schema  |      Name       | Type  | Owner  
+---------+-----------------+-------+--------
+ staging | cidades_kaggle  | table | lorena
+ staging | clientes        | table | lorena
+ staging | compras         | table | lorena
+ staging | municipios_ibge | table | lorena
+ staging | produtos        | table | lorena
+(5 rows)
+
+            List of relations
+ Schema |      Name      | Type  | Owner  
+--------+----------------+-------+--------
+ dw     | dim_cliente    | table | lorena
+ dw     | dim_data       | table | lorena
+ dw     | dim_localidade | table | lorena
+ dw     | dim_produto    | table | lorena
+ dw     | etl_etapas     | table | lorena
+ dw     | fato_compras   | table | lorena
+(6 rows)
+
+             List of relations
+ Schema |       Name       | Type  | Owner  
+--------+------------------+-------+--------
+ ml     | features_cliente | table | lorena
+ ml     | metricas_modelo  | table | lorena
+ ml     | previsoes_teste  | table | lorena
+(3 rows)
+
+$ psql -d projeto_integrador -c '\d dw.fato_compras'
+                   Table "dw.fato_compras"
+   Column    |     Type      | Collation | Nullable | Default 
+-------------+---------------+-----------+----------+---------
+ id_compra   | integer       |           | not null | 
+ cliente_id  | integer       |           | not null | 
+ produto_id  | text          |           | not null | 
+ data_compra | date          |           | not null | 
+ quantidade  | smallint      |           | not null | 
+ valor       | numeric(12,2) |           | not null | 
+ custo_total | numeric(12,2) |           | not null | 
+ canal       | text          |           | not null | 
+ pagamento   | text          |           | not null | 
+Indexes:
+    "fato_compras_pkey" PRIMARY KEY, btree (id_compra)
+    "idx_fato_cliente" btree (cliente_id)
+    "idx_fato_data" btree (data_compra)
+    "idx_fato_produto" btree (produto_id)
+Check constraints:
+    "fato_compras_canal_check" CHECK (canal = ANY (ARRAY['Loja Física'::text, 'Site'::text, 'App'::text]))
+    "fato_compras_custo_total_check" CHECK (custo_total > 0::numeric)
+    "fato_compras_quantidade_check" CHECK (quantidade >= 1 AND quantidade <= 20)
+    "fato_compras_valor_check" CHECK (valor > 0::numeric)
+Foreign-key constraints:
+    "fato_compras_cliente_id_fkey" FOREIGN KEY (cliente_id) REFERENCES dw.dim_cliente(cliente_id)
+    "fato_compras_data_compra_fkey" FOREIGN KEY (data_compra) REFERENCES dw.dim_data(data)
+    "fato_compras_produto_id_fkey" FOREIGN KEY (produto_id) REFERENCES dw.dim_produto(produto_id)
+
+$ psql -d projeto_integrador -f sql/verificacao.sql
+1. Linhas por tabela (staging = bruto, dw = limpo, ml = modelo)
+         tabela          | linhas 
+-------------------------+--------
+ staging.compras         |  17592
+ staging.clientes        |   1545
+ staging.produtos        |     25
+ staging.municipios_ibge |   5571
+ staging.cidades_kaggle  |   5573
+ dw.fato_compras         |  16092
+ dw.dim_cliente          |   1500
+ dw.dim_produto          |     25
+ dw.dim_localidade       |   5571
+ dw.dim_data             |    545
+ ml.features_cliente     |    999
+ ml.previsoes_teste      |    200
+(12 rows)
+
+2. Qualidade do fato: tudo deve ser zero
+ ids_repetidos | valores_invalidos | datas_futuras | sem_cliente | sem_produto | preco_fora_da_faixa 
+---------------+-------------------+---------------+-------------+-------------+---------------------
+             0 |                 0 |             0 |           0 |           0 |                   0
+(1 row)
+
+3. Trilha do ETL: linhas que entraram, foram removidas e restaram em cada etapa
+    fonte    |          etapa          | entraram | removidos | restaram 
+-------------+-------------------------+----------+-----------+----------
+ localidades | municípios do IBGE      |     5571 |         0 |     5571
+ localidades | indicadores do Kaggle   |     5571 |         0 |     5571
+ produtos    | catálogo válido         |       25 |         0 |       25
+ clientes    | sem duplicatas          |     1545 |        45 |     1500
+ clientes    | sem inválidos           |     1500 |         0 |     1500
+ clientes    | município do IBGE       |     1500 |         0 |     1500
+ compras     | sem duplicatas          |    17592 |       512 |    17080
+ compras     | sem inválidos           |    17080 |       732 |    16348
+ compras     | integridade referencial |    16348 |        99 |    16249
+ compras     | sem outliers de preço   |    16249 |       157 |    16092
+(10 rows)
+
+4. Chaves estrangeiras do modelo estrela
+     tabela      |                              definicao                              
+-----------------+---------------------------------------------------------------------
+ dw.dim_cliente  | FOREIGN KEY (codigo_ibge) REFERENCES dw.dim_localidade(codigo_ibge)
+ dw.fato_compras | FOREIGN KEY (cliente_id) REFERENCES dw.dim_cliente(cliente_id)
+ dw.fato_compras | FOREIGN KEY (data_compra) REFERENCES dw.dim_data(data)
+ dw.fato_compras | FOREIGN KEY (produto_id) REFERENCES dw.dim_produto(produto_id)
+(4 rows)
+
+5. Receita, margem e IDHM por região (junta as cinco fontes)
+    regiao    | clientes | compras |  receita   | margem_pct | idhm_medio 
+--------------+----------+---------+------------+------------+------------
+ Norte        |      599 |    7222 | 4325580.15 |       35.8 |      0.731
+ Nordeste     |      268 |    2971 | 1759656.80 |       36.1 |      0.760
+ Sudeste      |      282 |    3048 | 1706794.26 |       35.4 |      0.806
+ Centro-Oeste |      121 |    1419 |  822990.16 |       34.9 |      0.804
+ Sul          |      106 |     965 |  488193.78 |       35.5 |      0.818
+ Sem cidade   |       43 |     467 |  295765.62 |       36.2 |           
+(6 rows)
+
+6. Receita por categoria
+ categoria  | compras |  receita   | ticket_medio 
+------------+---------+------------+--------------
+ Musculação |    2459 | 3537094.41 |      1438.43
+ Ciclismo   |    2177 | 2273836.26 |      1044.48
+ Corrida    |    2225 | 1374276.04 |       617.65
+ Basquete   |    2136 |  767158.32 |       359.16
+ Lutas      |    2331 |  637988.19 |       273.70
+ Futebol    |    2335 |  543810.39 |       232.90
+ Natação    |    2429 |  264817.16 |       109.02
+(7 rows)
+
+7. Métricas dos modelos gravadas pelo pipeline
+            modelo             | escolhido | cv_f1  | accuracy | precision | recall |   f1   | roc_auc 
+-------------------------------+-----------+--------+----------+-----------+--------+--------+---------
+ Regressão Logística           | t         | 0.6010 |   0.7850 |    0.6557 | 0.6452 | 0.6504 |  0.7900
+ Random Forest                 | f         | 0.5991 |   0.7850 |    0.7209 | 0.5000 | 0.5905 |  0.7886
+ Gradient Boosting             | f         | 0.5554 |   0.7600 |    0.7500 | 0.3387 | 0.4667 |  0.7276
+ Baseline (classe majoritária) | f         | 0.0000 |   0.6900 |    0.0000 | 0.0000 | 0.0000 |  0.5000
+(4 rows)
+
+8. Taxa real de churn por faixa de risco prevista (conjunto de teste)
+ risco | clientes | deram_churn | taxa_real_pct 
+-------+----------+-------------+---------------
+ baixo |      115 |          17 |          14.8
+ médio |       50 |          21 |          42.0
+ alto  |       35 |          24 |          68.6
+(3 rows)
+

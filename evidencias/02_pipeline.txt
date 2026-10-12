@@ -1,0 +1,38 @@
+$ python -m src.pipeline
+2026-10-11 23:05:46 | INFO    | === início do pipeline | banco: postgresql+psycopg2://localhost/projeto_integrador ===
+2026-10-11 23:05:47 | INFO    | IBGE: 5571 municípios recebidos da API
+2026-10-11 23:05:47 | INFO    | extract   | compras          |  17592 linhas |  8 colunas
+2026-10-11 23:05:47 | INFO    | extract   | clientes         |   1545 linhas |  8 colunas
+2026-10-11 23:05:47 | INFO    | extract   | produtos         |     25 linhas |  5 colunas
+2026-10-11 23:05:47 | INFO    | extract   | municipios_ibge  |   5571 linhas | 16 colunas
+2026-10-11 23:05:47 | INFO    | extract   | cidades_kaggle   |   5573 linhas |  7 colunas
+2026-10-11 23:05:47 | INFO    | transform | localidades | municípios do IBGE     | entraram   5571 | removidos     0 | restaram   5571
+2026-10-11 23:05:47 | INFO    | transform | localidades | indicadores do Kaggle  | entraram   5571 | removidos     0 | restaram   5571
+2026-10-11 23:05:47 | INFO    | transform | produtos    | catálogo válido        | entraram     25 | removidos     0 | restaram     25
+2026-10-11 23:05:47 | INFO    | transform | clientes    | sem duplicatas         | entraram   1545 | removidos    45 | restaram   1500
+2026-10-11 23:05:47 | INFO    | transform | clientes    | sem inválidos          | entraram   1500 | removidos     0 | restaram   1500
+2026-10-11 23:05:47 | INFO    | transform | clientes    | município do IBGE      | entraram   1500 | removidos     0 | restaram   1500
+2026-10-11 23:05:47 | INFO    | transform | compras     | sem duplicatas         | entraram  17592 | removidos   512 | restaram  17080
+2026-10-11 23:05:47 | INFO    | transform | compras     | sem inválidos          | entraram  17080 | removidos   732 | restaram  16348
+2026-10-11 23:05:47 | INFO    | transform | compras     | integridade referencial | entraram  16348 | removidos    99 | restaram  16249
+2026-10-11 23:05:47 | INFO    | transform | compras     | sem outliers de preço  | entraram  16249 | removidos   157 | restaram  16092
+2026-10-11 23:05:47 | INFO    | load      | estrutura recriada a partir de sql/schema.sql
+2026-10-11 23:05:48 | INFO    | load      | staging.compras          |  17592 linhas
+2026-10-11 23:05:48 | INFO    | load      | staging.clientes         |   1545 linhas
+2026-10-11 23:05:48 | INFO    | load      | staging.produtos         |     25 linhas
+2026-10-11 23:05:49 | INFO    | load      | staging.municipios_ibge  |   5571 linhas
+2026-10-11 23:05:49 | INFO    | load      | staging.cidades_kaggle   |   5573 linhas
+2026-10-11 23:05:49 | INFO    | load      | dw.dim_localidade        |   5571 linhas
+2026-10-11 23:05:50 | INFO    | load      | dw.dim_cliente           |   1500 linhas
+2026-10-11 23:05:50 | INFO    | load      | dw.dim_produto           |     25 linhas
+2026-10-11 23:05:50 | INFO    | load      | dw.dim_data              |    545 linhas
+2026-10-11 23:05:51 | INFO    | load      | dw.fato_compras          |  16092 linhas
+2026-10-11 23:05:51 | INFO    | verify    | contagens, receita (R$ 9398980.77) e junções conferidas no PostgreSQL
+2026-10-11 23:05:51 | INFO    | features  | 999 clientes ativos | 29 features | churn 30.8% | gravado em ml.features_cliente
+2026-10-11 23:05:51 | INFO    | modelo    | Baseline (classe majoritária)  | F1 (CV) 0.000 | F1 teste 0.000 | ROC AUC teste 0.500
+2026-10-11 23:05:51 | INFO    | modelo    | Regressão Logística            | F1 (CV) 0.601 | F1 teste 0.650 | ROC AUC teste 0.790
+2026-10-11 23:05:53 | INFO    | modelo    | Random Forest                  | F1 (CV) 0.599 | F1 teste 0.590 | ROC AUC teste 0.789
+2026-10-11 23:05:54 | INFO    | modelo    | Gradient Boosting              | F1 (CV) 0.555 | F1 teste 0.467 | ROC AUC teste 0.728
+2026-10-11 23:05:55 | INFO    | modelo    | escolhido: Regressão Logística | salvo em models/modelo_churn.pkl (3 KB)
+2026-10-11 23:05:55 | INFO    | resultado | Regressão Logística | F1 0.650 | recall 0.645 | precision 0.656 | ROC AUC 0.790 | accuracy 0.785
+2026-10-11 23:05:55 | INFO    | === fim do pipeline em 8.9 s ===

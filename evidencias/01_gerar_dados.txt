@@ -1,0 +1,32 @@
+$ python -m src.gerar_dados
+compras.csv:   17592 linhas (17080 compras de 1424 clientes antes da sujeira)
+clientes.xlsx: 1545 linhas (1500 clientes antes da sujeira)
+produtos.json: 25 produtos em 7 categorias
+Sujeira injetada:
+    225  clientes: cidade com texto inconsistente
+    120  clientes: segmento com texto inconsistente
+     90  clientes: nome com texto inconsistente
+     90  clientes: uf em minúsculas ou com espaços
+    150  clientes: email com maiúsculas ou espaços
+    120  clientes: data_nascimento em DD/MM/AAAA
+     75  clientes: data_cadastro em DD/MM/AAAA
+     15  clientes: data_nascimento impossível
+     45  clientes: cidade e uf ausentes
+     60  clientes: data_nascimento ausente
+     30  clientes: email ausente
+     45  clientes: linhas duplicadas
+    854  compras: canal com texto inconsistente
+   1366  compras: data_compra em DD/MM/AAAA
+    683  compras: valor como texto (R$ 1.299,90)
+    170  compras: valor outlier (x10 ou x100)
+    103  compras: valor negativo
+    102  compras: quantidade inválida (0, -1, 999)
+     85  compras: data_compra inválida
+     51  compras: data_compra no futuro
+     51  compras: cliente_id que não existe no cadastro
+     51  compras: produto_id que não existe no catálogo
+    341  compras: pagamento ausente
+    256  compras: valor ausente
+     85  compras: data_compra ausente
+     68  compras: cliente_id ausente
+    512  compras: linhas duplicadas
