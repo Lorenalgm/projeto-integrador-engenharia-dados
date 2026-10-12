@@ -189,7 +189,7 @@ checklist = tabela(['Item do checklist', 'Onde está'], [
 
 corpo = f"""
 <h1>Projeto Integrador: pipeline de dados para previsão de churn</h1>
-<p>Disciplina de Engenharia de Dados. Projeto individual de Lorena (@Lorenalgm).<br>
+<p>Disciplina de Engenharia de Dados.<br>
 Repositório: <b>{REPO}</b></p>
 <p><b>Problema.</b> Uma loja de artigos esportivos quer saber quais clientes vão parar de comprar, para agir antes.
 É um problema de <b>classificação</b>: para cada cliente ativo, prever se ele dará churn nos próximos 90 dias.
