@@ -67,13 +67,6 @@ as duas últimas são dados públicos reais e enriquecem o cadastro, que só tem
 <p><code>src/extract.py</code> lê tudo como texto, sem tratar nada. A API do IBGE tem três tentativas e a resposta fica guardada
 em disco para o caso de a API não responder. O arquivo do Kaggle é baixado pela API do Kaggle quando não existe e fica
 versionado no repositório, então não é preciso ter conta para reproduzir.</p>
-<pre>2026-10-11 23:05:46 | INFO    | === início do pipeline | banco: postgresql+psycopg2://localhost/projeto_integrador ===
-2026-10-11 23:05:47 | INFO    | IBGE: 5571 municípios recebidos da API
-2026-10-11 23:05:47 | INFO    | extract   | compras          |  17592 linhas |  8 colunas
-2026-10-11 23:05:47 | INFO    | extract   | clientes         |   1545 linhas |  8 colunas
-2026-10-11 23:05:47 | INFO    | extract   | produtos         |     25 linhas |  5 colunas
-2026-10-11 23:05:47 | INFO    | extract   | municipios_ibge  |   5571 linhas | 16 colunas
-2026-10-11 23:05:47 | INFO    | extract   | cidades_kaggle   |   5573 linhas |  7 colunas</pre>
 <p>As fontes fictícias são geradas por <code>src/gerar_dados.py</code> (semente fixa), que simula o ritmo de compra e a data de
 abandono de cada cliente e depois injeta a sujeira abaixo.</p>
 <pre>$ python -m src.gerar_dados
@@ -131,36 +124,17 @@ nas regras de negócio, índices nas chaves do fato, a tabela <code>etl_etapas</
 <p class="nota">Modelo estrela do schema <code>dw</code>. A dimensão de localidade liga ao cliente (floco de neve em um nível)
 porque a cidade é um atributo do cliente, não da compra.</p>
 <div class="lado">
-<div style="width:49%"><pre>$ psql -d projeto_integrador -c &#x27;\dt staging.*&#x27; -c &#x27;\dt dw.*&#x27; -c &#x27;\dt ml.*&#x27;
-             List of relations
- Schema  |      Name       | Type  | Owner  
----------+-----------------+-------+--------
- staging | cidades_kaggle  | table | lorena
- staging | clientes        | table | lorena
- staging | compras         | table | lorena
- staging | municipios_ibge | table | lorena
- staging | produtos        | table | lorena
-(5 rows)
-
-            List of relations
- Schema |      Name      | Type  | Owner  
---------+----------------+-------+--------
- dw     | dim_cliente    | table | lorena
- dw     | dim_data       | table | lorena
- dw     | dim_localidade | table | lorena
- dw     | dim_produto    | table | lorena
- dw     | etl_etapas     | table | lorena
- dw     | fato_compras   | table | lorena
-(6 rows)
-
-             List of relations
- Schema |       Name       | Type  | Owner  
---------+------------------+-------+--------
- ml     | features_cliente | table | lorena
- ml     | metricas_modelo  | table | lorena
- ml     | previsoes_teste  | table | lorena
-(3 rows)</pre></div>
-<div style="width:49%"><pre class='larga'>$ psql -d projeto_integrador -c &#x27;\d dw.fato_compras&#x27;
+<div style="width:53%"><figure style="width:100%"><div class="shot"><img src="../evidencias/prints/print_psql_verificacao.png"></div><figcaption>Terminal: psql executando sql/verificacao.sql.</figcaption></figure></div>
+<div style="width:45%"><p><code>sql/verificacao.sql</code> confere a carga direto no banco:</p>
+<ul>
+<li><b>Consultas 1 a 3:</b> linhas por tabela, qualidade do fato (tudo zero) e a trilha do ETL.</li>
+<li><b>Consulta 4:</b> chaves estrangeiras lidas do catálogo do PostgreSQL.</li>
+<li><b>Consulta 5:</b> receita, margem e IDHM por região. Só é possível com as fontes integradas: compra do CSV, custo
+do JSON, cliente do Excel, região da API do IBGE e IDHM do Kaggle.</li>
+<li><b>Consultas 7 e 8:</b> métricas dos modelos e taxa real de churn por faixa de risco, gravadas pelo pipeline.</li>
+</ul>
+<p>Estrutura da tabela fato, com índices, <code>CHECK</code> e chaves estrangeiras:</p>
+<pre class='larga'>$ psql -d projeto_integrador -c &#x27;\d dw.fato_compras&#x27;
                    Table &quot;dw.fato_compras&quot;
    Column    |     Type      | Collation | Nullable | Default 
 -------------+---------------+-----------+----------+---------
@@ -188,52 +162,6 @@ Foreign-key constraints:
     &quot;fato_compras_data_compra_fkey&quot; FOREIGN KEY (data_compra) REFERENCES dw.dim_data(data)
     &quot;fato_compras_produto_id_fkey&quot; FOREIGN KEY (produto_id) REFERENCES dw.dim_produto(produto_id)</pre></div>
 </div>
-<figure style="width:58%"><div class="shot"><img src="../evidencias/prints/print_psql_verificacao.png"></div><figcaption>Terminal: psql executando sql/verificacao.sql no banco projeto_integrador.</figcaption></figure>
-<p>As consultas de <code>sql/verificacao.sql</code> conferem a carga. Linhas por tabela, qualidade do fato (tudo zero) e as
-chaves estrangeiras lidas do catálogo do PostgreSQL:</p>
-<div class="lado">
-<div style="width:36%"><pre>1. Linhas por tabela (staging = bruto, dw = limpo, ml = modelo)
-         tabela          | linhas 
--------------------------+--------
- staging.compras         |  17592
- staging.clientes        |   1545
- staging.produtos        |     25
- staging.municipios_ibge |   5571
- staging.cidades_kaggle  |   5573
- dw.fato_compras         |  16092
- dw.dim_cliente          |   1500
- dw.dim_produto          |     25
- dw.dim_localidade       |   5571
- dw.dim_data             |    545
- ml.features_cliente     |    999
- ml.previsoes_teste      |    200
-(12 rows)</pre></div>
-<div style="width:62%"><pre class='larga'>4. Chaves estrangeiras do modelo estrela
-     tabela      |                              definicao                              
------------------+---------------------------------------------------------------------
- dw.dim_cliente  | FOREIGN KEY (codigo_ibge) REFERENCES dw.dim_localidade(codigo_ibge)
- dw.fato_compras | FOREIGN KEY (cliente_id) REFERENCES dw.dim_cliente(cliente_id)
- dw.fato_compras | FOREIGN KEY (data_compra) REFERENCES dw.dim_data(data)
- dw.fato_compras | FOREIGN KEY (produto_id) REFERENCES dw.dim_produto(produto_id)
-(4 rows)</pre>
-<pre class='larga'>5. Receita, margem e IDHM por região (junta as cinco fontes)
-    regiao    | clientes | compras |  receita   | margem_pct | idhm_medio 
---------------+----------+---------+------------+------------+------------
- Norte        |      599 |    7222 | 4325580.15 |       35.8 |      0.731
- Nordeste     |      268 |    2971 | 1759656.80 |       36.1 |      0.760
- Sudeste      |      282 |    3048 | 1706794.26 |       35.4 |      0.806
- Centro-Oeste |      121 |    1419 |  822990.16 |       34.9 |      0.804
- Sul          |      106 |     965 |  488193.78 |       35.5 |      0.818
- Sem cidade   |       43 |     467 |  295765.62 |       36.2 |           
-(6 rows)</pre></div>
-</div>
-<pre>2. Qualidade do fato: tudo deve ser zero
- ids_repetidos | valores_invalidos | datas_futuras | sem_cliente | sem_produto | preco_fora_da_faixa 
----------------+-------------------+---------------+-------------+-------------+---------------------
-             0 |                 0 |             0 |           0 |           0 |                   0
-(1 row)</pre>
-<p>A consulta 5 só é possível com as fontes integradas: compra do CSV, custo do JSON, cliente do Excel, região da API do
-IBGE e IDHM do Kaggle.</p>
 
 <h2>3. Processo de ETL em Python</h2>
 <p>O ETL está em três módulos, orquestrados por <code>src/pipeline.py</code>: <code>extract.py</code> (leitura das fontes),
@@ -258,30 +186,8 @@ código, então a junção usa nome sem acento + UF (existe Santana no Amapá e 
 próprio banco contagens, receita e junções.</li>
 </ul>
 <figure style="width:92%"><img src="../reports/figuras/02_outliers_preco.png"><figcaption>Preço unitário pago em relação ao preço de tabela, antes e depois da limpeza. Antes, há compras com 10 e 100 vezes o preço do produto; depois, tudo fica entre 85% e 100% (descontos de até 15%).</figcaption></figure>
-<p>Log da transformação, da carga e da verificação (<code>python -m src.pipeline</code>):</p>
-<pre class='larga'>2026-10-11 23:05:47 | INFO    | transform | localidades | municípios do IBGE     | entraram   5571 | removidos     0 | restaram   5571
-2026-10-11 23:05:47 | INFO    | transform | localidades | indicadores do Kaggle  | entraram   5571 | removidos     0 | restaram   5571
-2026-10-11 23:05:47 | INFO    | transform | produtos    | catálogo válido        | entraram     25 | removidos     0 | restaram     25
-2026-10-11 23:05:47 | INFO    | transform | clientes    | sem duplicatas         | entraram   1545 | removidos    45 | restaram   1500
-2026-10-11 23:05:47 | INFO    | transform | clientes    | sem inválidos          | entraram   1500 | removidos     0 | restaram   1500
-2026-10-11 23:05:47 | INFO    | transform | clientes    | município do IBGE      | entraram   1500 | removidos     0 | restaram   1500
-2026-10-11 23:05:47 | INFO    | transform | compras     | sem duplicatas         | entraram  17592 | removidos   512 | restaram  17080
-2026-10-11 23:05:47 | INFO    | transform | compras     | sem inválidos          | entraram  17080 | removidos   732 | restaram  16348
-2026-10-11 23:05:47 | INFO    | transform | compras     | integridade referencial | entraram  16348 | removidos    99 | restaram  16249
-2026-10-11 23:05:47 | INFO    | transform | compras     | sem outliers de preço  | entraram  16249 | removidos   157 | restaram  16092
-2026-10-11 23:05:47 | INFO    | load      | estrutura recriada a partir de sql/schema.sql
-2026-10-11 23:05:48 | INFO    | load      | staging.compras          |  17592 linhas
-2026-10-11 23:05:48 | INFO    | load      | staging.clientes         |   1545 linhas
-2026-10-11 23:05:48 | INFO    | load      | staging.produtos         |     25 linhas
-2026-10-11 23:05:49 | INFO    | load      | staging.municipios_ibge  |   5571 linhas
-2026-10-11 23:05:49 | INFO    | load      | staging.cidades_kaggle   |   5573 linhas
-2026-10-11 23:05:49 | INFO    | load      | dw.dim_localidade        |   5571 linhas
-2026-10-11 23:05:50 | INFO    | load      | dw.dim_cliente           |   1500 linhas
-2026-10-11 23:05:50 | INFO    | load      | dw.dim_produto           |     25 linhas
-2026-10-11 23:05:50 | INFO    | load      | dw.dim_data              |    545 linhas
-2026-10-11 23:05:51 | INFO    | load      | dw.fato_compras          |  16092 linhas
-2026-10-11 23:05:51 | INFO    | verify    | contagens, receita (R$ 9398980.77) e junções conferidas no PostgreSQL</pre>
-<figure style="width:88%"><div class="shot"><img src="../evidencias/prints/print_terminal_pipeline.png"></div><figcaption>Terminal: execução completa do pipeline.</figcaption></figure>
+<p>Execução completa, da extração às métricas do modelo:</p>
+<figure style="width:92%"><div class="shot"><img src="../evidencias/prints/print_terminal_pipeline.png"></div><figcaption>Terminal: python -m src.pipeline. Cada linha mostra a etapa, a fonte ou tabela e a contagem de linhas.</figcaption></figure>
 <p>As regras de limpeza têm testes automatizados (<code>tests/test_transform.py</code>), que rodam sem banco e sem rede:</p>
 <pre class='larga'>$ python -m pytest -v
 tests/test_transform.py::test_para_numero_aceita_formato_brasileiro PASSED [  9%]
@@ -332,15 +238,6 @@ CV são a média da validação cruzada (5 dobras estratificadas, só no treino)
 <table class="num"><thead><tr><th>Modelo</th><th>F1 (CV)</th><th>Desvio (CV)</th><th>ROC AUC (CV)</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1</th><th>ROC AUC</th></tr></thead><tbody><tr><td><b>Regressão Logística</b></td><td>0,601</td><td>0,043</td><td>0,777</td><td>0,785</td><td>0,656</td><td>0,645</td><td>0,650</td><td>0,790</td></tr><tr><td>Random Forest</td><td>0,599</td><td>0,050</td><td>0,778</td><td>0,785</td><td>0,721</td><td>0,500</td><td>0,590</td><td>0,789</td></tr><tr><td>Gradient Boosting</td><td>0,555</td><td>0,058</td><td>0,755</td><td>0,760</td><td>0,750</td><td>0,339</td><td>0,467</td><td>0,728</td></tr><tr><td>Baseline (classe majoritária)</td><td>0,000</td><td>0,000</td><td>0,500</td><td>0,690</td><td>0,000</td><td>0,000</td><td>0,000</td><td>0,500</td></tr></tbody></table>
 <p><b>Modelo escolhido: Regressão Logística.</b> Critério: maior F1 médio na validação cruzada. A escolha não usa o teste,
 que fica só para a avaliação final.</p>
-<pre class='larga'>2026-10-11 23:05:51 | INFO    | features  | 999 clientes ativos | 29 features | churn 30.8% | gravado em ml.features_cliente
-2026-10-11 23:05:51 | INFO    | modelo    | Baseline (classe majoritária)  | F1 (CV) 0.000 | F1 teste 0.000 | ROC AUC teste 0.500
-2026-10-11 23:05:51 | INFO    | modelo    | Regressão Logística            | F1 (CV) 0.601 | F1 teste 0.650 | ROC AUC teste 0.790
-2026-10-11 23:05:53 | INFO    | modelo    | Random Forest                  | F1 (CV) 0.599 | F1 teste 0.590 | ROC AUC teste 0.789
-2026-10-11 23:05:54 | INFO    | modelo    | Gradient Boosting              | F1 (CV) 0.555 | F1 teste 0.467 | ROC AUC teste 0.728
-2026-10-11 23:05:55 | INFO    | modelo    | escolhido: Regressão Logística | salvo em models/modelo_churn.pkl (3 KB)
-2026-10-11 23:05:55 | INFO    | resultado | Regressão Logística | F1 0.650 | recall 0.645 | precision 0.656 | ROC AUC 0.790 | accuracy 0.785
-2026-10-11 23:05:55 | INFO    | === fim do pipeline em 8.9 s ===</pre>
-<figure style="width:88%"><img src="../reports/figuras/09_comparacao_modelos.png"><figcaption>Métricas dos quatro modelos no conjunto de teste.</figcaption></figure>
 
 <h2>7. Avaliação, métricas e resultados</h2>
 <p>A métrica principal é o <b>F1 da classe churn</b>, porque a accuracy engana com classes desbalanceadas: o baseline acerta
@@ -364,15 +261,7 @@ sobe de uma faixa para a outra, sinal de que o modelo ordena bem.</p>
 e comparado na validação cruzada:</p>
 <table class="num"><thead><tr><th>Features usadas</th><th>Quantidade</th><th>F1 (CV)</th><th>Desvio (CV)</th><th>ROC AUC (CV)</th></tr></thead><tbody><tr><td>Só fontes internas (CSV, Excel, JSON)</td><td>20</td><td>0,596</td><td>0,050</td><td>0,785</td></tr><tr><td>Internas + região (API IBGE)</td><td>25</td><td>0,595</td><td>0,048</td><td>0,780</td></tr><tr><td>Todas as fontes (com Kaggle)</td><td>29</td><td>0,601</td><td>0,043</td><td>0,777</td></tr></tbody></table>
 <p>As métricas também ficam no PostgreSQL (<code>ml.metricas_modelo</code>) e as previsões do teste em
-<code>ml.previsoes_teste</code>:</p>
-<pre class='larga'>7. Métricas dos modelos gravadas pelo pipeline
-            modelo             | escolhido | cv_f1  | accuracy | precision | recall |   f1   | roc_auc 
--------------------------------+-----------+--------+----------+-----------+--------+--------+---------
- Regressão Logística           | t         | 0.6010 |   0.7850 |    0.6557 | 0.6452 | 0.6504 |  0.7900
- Random Forest                 | f         | 0.5991 |   0.7850 |    0.7209 | 0.5000 | 0.5905 |  0.7886
- Gradient Boosting             | f         | 0.5554 |   0.7600 |    0.7500 | 0.3387 | 0.4667 |  0.7276
- Baseline (classe majoritária) | f         | 0.0000 |   0.6900 |    0.0000 | 0.0000 | 0.0000 |  0.5000
-(4 rows)</pre>
+<code>ml.previsoes_teste</code>.</p>
 <p><b>Conclusões</b> (última célula do notebook final):</p>
 <ul><li><b>O pipeline roda de ponta a ponta.</b> Cinco fontes (17.592 linhas de compras, 1.545 de clientes, 25 produtos, 5.571 municípios do IBGE e 5.573 do Kaggle) viram 16.092 compras limpas no modelo estrela do PostgreSQL, 29 features para 999 clientes e um modelo salvo. Tudo é reproduzível: semente fixa e um único comando.</li><li><b>Modelo escolhido: Regressão Logística.</b> Teve o maior F1 na validação cruzada (0,601), praticamente empatada com Random Forest (0,599; o desvio entre dobras é de 0,043). Entre dois modelos empatados, o mais simples e interpretável é a melhor escolha.</li><li><b>Quanto ele acerta.</b> No teste (200 clientes), F1 0,650, ROC AUC 0,790 e accuracy 0,785. Encontrou 40 dos 62 clientes que deram churn (recall 0,645). Dos 61 que apontou como risco, 40 realmente saíram (precision 0,656).</li><li><b>Por que não olhar só a accuracy.</b> Responder sempre "não é churn" acerta 69% dos casos sem encontrar nenhum churn. O ganho real do modelo está no recall e no F1, não nos poucos pontos de accuracy acima do baseline.</li><li><b>O Gradient Boosting é mais cauteloso.</b> Sem balanceamento de classes, só alerta com muita certeza e deixa passar a maioria dos churns (recall 0,339). Para retenção, perder um cliente custa mais do que um cupom a quem ia ficar.</li><li><b>O ranking de risco funciona.</b> Na faixa de risco alto, 69% dos 35 clientes realmente saíram; na faixa de risco baixo, 15% dos 115. Com o corte em 0,4, o recall sobe para 0,726 com precision de 0,529, acionando 85 clientes.</li><li><b>O que mais pesa.</b> <code>dias_sem_comprar</code> e <code>qtd_compras_90d</code>, bem à frente das demais. Recência e atividade recente são os sinais mais fortes, como a análise exploratória indicava.</li><li><b>Fontes externas.</b> Com as features de localidade, o F1 da validação cruzada vai de 0,596 para 0,601 (+0,005) e o ROC AUC muda -0,008. As duas diferenças são menores que o desvio entre dobras (0,043), ou seja, <b>não há ganho mensurável na previsão</b>. O modelo até usa essas colunas quando elas existem (<code>regiao_Sudeste</code>, <code>idhm</code>, <code>pib_per_capita</code> aparecem entre as 12 mais importantes), mas sem elas chega ao mesmo resultado: o comportamento de compra explica muito mais do que a cidade. O valor da integração ficou na análise (receita, margem e churn por região) e não no modelo.</li><li><b>Limitações.</b> As compras, os clientes e o catálogo são simulados, com premissas de abandono definidas em <code>src/gerar_dados.py</code> (segmento, canal, idade e região); só o IBGE e o Kaggle são dados reais. O abandono simulado tem um componente aleatório grande, o que limita o teto de qualquer modelo. São apenas 30 cidades, então os indicadores do Kaggle quase identificam a cidade. A avaliação usa uma única data de corte.</li><li><b>Próximos passos.</b> Validar em mais de uma data de corte, calibrar o ponto de corte pelo custo da ação de retenção, transformar a carga completa em incremental e agendar o pipeline.</li></ul>
 
@@ -382,38 +271,9 @@ e comparado na validação cruzada:</p>
 organização, diagrama do banco, instruções de execução (PostgreSQL local ou Docker) e resultados.</p>
 <div class="lado">
 <div style="width:49%"><figure style="width:100%"><div class="shot"><img src="../evidencias/prints/github_repositorio.png"></div><figcaption>Repositório no GitHub.</figcaption></figure></div>
-<div style="width:49%"><figure style="width:100%"><div class="shot"><img src="../evidencias/prints/github_commits.png"></div><figcaption>Histórico de commits.</figcaption></figure></div>
+<div style="width:49%"><figure style="width:100%"><div class="shot"><img src="../evidencias/prints/github_commits.png"></div><figcaption>Commits mais recentes.</figcaption></figure></div>
 </div>
-<pre class='larga'>$ git log --oneline --reverse
-db47ffe chore: configura estrutura inicial do projeto
-dc867e4 feat: adiciona gerador das fontes fictícias da loja
-6dad3fb chore: adiciona as fontes brutas geradas com semente fixa
-f4960cf feat: adiciona extração das cinco fontes de dados
-b3a5734 chore: adiciona os dados reais do IBGE e do Kaggle
-111e614 feat: adiciona a modelagem do banco no PostgreSQL
-8ea29b9 feat: adiciona a limpeza e a integração das fontes
-2808e34 test: cobre as regras de limpeza e integração
-964f844 feat: adiciona a carga no PostgreSQL com verificação
-5991cb5 feat: adiciona a engenharia de features a partir do PostgreSQL
-9fbb8fe feat: adiciona treino, comparação e avaliação dos modelos
-cabe0bb feat: adiciona o orquestrador do pipeline de ponta a ponta
-dfa89f4 chore: adiciona o modelo treinado e os resultados da execução
-ddf944a chore: adiciona docker-compose com PostgreSQL para reprodução
-14d92c8 feat: adiciona o estilo compartilhado dos gráficos
-7c1c991 feat: adiciona o notebook de análise exploratória
-f42a7d1 feat: adiciona o notebook final com o pipeline de ponta a ponta
-9581550 feat: adiciona consultas de verificação e análise no PostgreSQL
-5659b86 docs: documenta o projeto no README
-d2076d4 docs: adiciona as evidências de execução do pipeline
-3f05ee1 fix: evita quebra de linha nas tabelas impressas do notebook final
-660801e docs: adiciona o script que monta o relatório da entrega
-f070ef3 docs: adiciona o relatório em PDF, os prints e os notebooks em HTML
-053ab9b chore: fixa as versões das dependências para reprodução
-a23a31f docs: reescreve o README de forma direta e com sumário
-c9d7466 docs: remove a menção de autoria do notebook final
-c912a3a docs: atualiza o relatório, os prints e os notebooks em HTML
-5e593f8 fix: troca o diagrama de fluxo do notebook final por uma tabela</pre>
-<figure style="width:88%"><div class="shot"><img src="../evidencias/prints/print_jupyter_notebook_final.png"></div><figcaption>JupyterLab com o notebook final executado.</figcaption></figure>
+<figure style="width:60%"><div class="shot"><img src="../evidencias/prints/print_jupyter_notebook_final.png"></div><figcaption>JupyterLab com o notebook final executado.</figcaption></figure>
 
 <h2>Checklist da entrega</h2>
 <table class="curta"><thead><tr><th>Item do checklist</th><th>Onde está</th></tr></thead><tbody><tr><td>Pelo menos 2 fontes de dados</td><td>Cinco fontes: <code>data/raw/</code>, <code>src/extract.py</code> (seção 1)</td></tr><tr><td>Dados armazenados e modelados no PostgreSQL</td><td><code>sql/schema.sql</code>, schemas <code>staging</code>, <code>dw</code> e <code>ml</code> (seção 2)</td></tr><tr><td>Processo ETL em Python</td><td><code>src/extract.py</code>, <code>src/transform.py</code>, <code>src/load.py</code>, <code>src/pipeline.py</code> (seção 3)</td></tr><tr><td>Features preparadas e documentadas</td><td><code>src/features.py</code>, <code>reports/documentacao_features.csv</code> (seção 5)</td></tr><tr><td>Modelo de classificação treinado</td><td><code>src/model.py</code>, <code>models/modelo_churn.pkl</code> (seção 6)</td></tr><tr><td>Métricas do modelo apresentadas</td><td><code>reports/metricas.json</code>, <code>reports/comparacao_modelos.csv</code>, tabela <code>ml.metricas_modelo</code> (seções 6 e 7)</td></tr><tr><td>Notebook de análise exploratória</td><td><code>notebooks/01_analise_exploratoria.ipynb</code> (seção 4)</td></tr><tr><td>README com instruções claras</td><td><code>README.md</code></td></tr><tr><td>Repositório Git acessível</td><td>https://github.com/Lorenalgm/projeto-integrador-engenharia-dados (público, seção 8)</td></tr><tr><td>Notebook final (.ipynb)</td><td><code>notebooks/02_projeto_integrador.ipynb</code></td></tr></tbody></table>

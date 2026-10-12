@@ -36,11 +36,6 @@ def trecho(caminho, ini, fim=None, n=None):
     return ls[i:j]
 
 
-def filtro(caminho, *termos):
-    """Linhas do arquivo que contêm algum dos termos."""
-    return [l for l in linhas(caminho) if any(t in l for t in termos)]
-
-
 def pre(*partes, larga=False):
     out = []
     for p in partes:
@@ -125,7 +120,7 @@ nb_eda, nb_final = saidas('notebooks/01_analise_exploratoria.ipynb'), saidas('no
 for nome, nb in [('EDA', nb_eda), ('final', nb_final)]:
     assert [c[3] for c in nb] == list(range(1, len(nb) + 1)), f'notebook {nome} não foi executado em ordem do início ao fim'
 
-LOG, PG = 'evidencias/02_pipeline.txt', 'evidencias/03_postgres.txt'
+PG = 'evidencias/03_postgres.txt'
 etapas = ler_csv('reports/etapas_etl.csv')
 doc = ler_csv('reports/documentacao_features.csv')
 modelos = ler_csv('reports/comparacao_modelos.csv')
@@ -135,7 +130,6 @@ escolhido = next(m for m in modelos if m['escolhido'] == 'True')
 compras = [e for e in etapas if e['fonte'] == 'compras']
 n_bruto, n_limpo = int(compras[0]['entraram']), int(compras[-1]['restaram'])
 versoes = saida(nb_final, 'print(f\'Python')[0]
-commits = linhas('evidencias/05_git_log.txt')
 
 tab_etapas = tabela(['Fonte', 'Etapa', 'Entraram', 'Removidos', 'Restaram', 'O que foi feito'],
                     [(e['fonte'], e['etapa'], inteiro(e['entraram']), inteiro(e['removidos']), inteiro(e['restaram']),
@@ -210,7 +204,6 @@ as duas últimas são dados públicos reais e enriquecem o cadastro, que só tem
 <p><code>src/extract.py</code> lê tudo como texto, sem tratar nada. A API do IBGE tem três tentativas e a resposta fica guardada
 em disco para o caso de a API não responder. O arquivo do Kaggle é baixado pela API do Kaggle quando não existe e fica
 versionado no repositório, então não é preciso ter conta para reproduzir.</p>
-{pre(filtro(LOG, 'início do pipeline', 'IBGE:', 'extract'))}
 <p>As fontes fictícias são geradas por <code>src/gerar_dados.py</code> (semente fixa), que simula o ritmo de compra e a data de
 abandono de cada cliente e depois injeta a sujeira abaixo.</p>
 {pre(linhas('evidencias/01_gerar_dados.txt'))}
@@ -228,20 +221,18 @@ nas regras de negócio, índices nas chaves do fato, a tabela <code>etl_etapas</
 <p class="nota">Modelo estrela do schema <code>dw</code>. A dimensão de localidade liga ao cliente (floco de neve em um nível)
 porque a cidade é um atributo do cliente, não da compra.</p>
 <div class="lado">
-<div style="width:49%">{pre(trecho(PG, "$ psql -d projeto_integrador -c '\\dt staging.*'", fim="$ psql -d projeto_integrador -c '\\d dw.fato_compras'"))}</div>
-<div style="width:49%">{pre(trecho(PG, "$ psql -d projeto_integrador -c '\\d dw.fato_compras'", fim='$ psql -d projeto_integrador -f'), larga=True)}</div>
+<div style="width:53%">{shot('evidencias/prints/print_psql_verificacao.png', 'Terminal: psql executando sql/verificacao.sql.')}</div>
+<div style="width:45%"><p><code>sql/verificacao.sql</code> confere a carga direto no banco:</p>
+<ul>
+<li><b>Consultas 1 a 3:</b> linhas por tabela, qualidade do fato (tudo zero) e a trilha do ETL.</li>
+<li><b>Consulta 4:</b> chaves estrangeiras lidas do catálogo do PostgreSQL.</li>
+<li><b>Consulta 5:</b> receita, margem e IDHM por região. Só é possível com as fontes integradas: compra do CSV, custo
+do JSON, cliente do Excel, região da API do IBGE e IDHM do Kaggle.</li>
+<li><b>Consultas 7 e 8:</b> métricas dos modelos e taxa real de churn por faixa de risco, gravadas pelo pipeline.</li>
+</ul>
+<p>Estrutura da tabela fato, com índices, <code>CHECK</code> e chaves estrangeiras:</p>
+{pre(trecho(PG, "$ psql -d projeto_integrador -c '\\d dw.fato_compras'", fim='$ psql -d projeto_integrador -f'), larga=True)}</div>
 </div>
-{shot('evidencias/prints/print_psql_verificacao.png', 'Terminal: psql executando sql/verificacao.sql no banco projeto_integrador.', 58)}
-<p>As consultas de <code>sql/verificacao.sql</code> conferem a carga. Linhas por tabela, qualidade do fato (tudo zero) e as
-chaves estrangeiras lidas do catálogo do PostgreSQL:</p>
-<div class="lado">
-<div style="width:36%">{pre(trecho(PG, '1. Linhas por tabela', fim='2. Qualidade do fato'))}</div>
-<div style="width:62%">{pre(trecho(PG, '4. Chaves estrangeiras', fim='5. Receita, margem'), larga=True)}
-{pre(trecho(PG, '5. Receita, margem', fim='6. Receita por categoria'), larga=True)}</div>
-</div>
-{pre(trecho(PG, '2. Qualidade do fato', fim='3. Trilha do ETL'))}
-<p>A consulta 5 só é possível com as fontes integradas: compra do CSV, custo do JSON, cliente do Excel, região da API do
-IBGE e IDHM do Kaggle.</p>
 
 <h2>3. Processo de ETL em Python</h2>
 <p>O ETL está em três módulos, orquestrados por <code>src/pipeline.py</code>: <code>extract.py</code> (leitura das fontes),
@@ -266,9 +257,8 @@ código, então a junção usa nome sem acento + UF (existe Santana no Amapá e 
 próprio banco contagens, receita e junções.</li>
 </ul>
 {img('reports/figuras/02_outliers_preco.png', 'Preço unitário pago em relação ao preço de tabela, antes e depois da limpeza. Antes, há compras com 10 e 100 vezes o preço do produto; depois, tudo fica entre 85% e 100% (descontos de até 15%).', 92)}
-<p>Log da transformação, da carga e da verificação (<code>python -m src.pipeline</code>):</p>
-{pre(filtro(LOG, 'transform', 'load ', 'verify'), larga=True)}
-{shot('evidencias/prints/print_terminal_pipeline.png', 'Terminal: execução completa do pipeline.', 88)}
+<p>Execução completa, da extração às métricas do modelo:</p>
+{shot('evidencias/prints/print_terminal_pipeline.png', 'Terminal: python -m src.pipeline. Cada linha mostra a etapa, a fonte ou tabela e a contagem de linhas.', 92)}
 <p>As regras de limpeza têm testes automatizados (<code>tests/test_transform.py</code>), que rodam sem banco e sem rede:</p>
 {pre([l for l in linhas('evidencias/04_testes.txt') if l.startswith(('$', 'tests/', '===')) and 'session starts' not in l], larga=True)}
 
@@ -305,8 +295,6 @@ CV são a média da validação cruzada (5 dobras estratificadas, só no treino)
 {tab_modelos}
 <p><b>Modelo escolhido: {escolhido['modelo']}.</b> Critério: maior F1 médio na validação cruzada. A escolha não usa o teste,
 que fica só para a avaliação final.</p>
-{pre(filtro(LOG, 'features  |', 'modelo    |', 'resultado |', 'fim do pipeline'), larga=True)}
-{img('reports/figuras/09_comparacao_modelos.png', 'Métricas dos quatro modelos no conjunto de teste.', 88)}
 
 <h2>7. Avaliação, métricas e resultados</h2>
 <p>A métrica principal é o <b>F1 da classe churn</b>, porque a accuracy engana com classes desbalanceadas: o baseline acerta
@@ -325,8 +313,7 @@ sobe de uma faixa para a outra, sinal de que o modelo ordena bem.</p>
 e comparado na validação cruzada:</p>
 {tab_fontes_ext}
 <p>As métricas também ficam no PostgreSQL (<code>ml.metricas_modelo</code>) e as previsões do teste em
-<code>ml.previsoes_teste</code>:</p>
-{pre(trecho(PG, '7. Métricas dos modelos', fim='8. Taxa real de churn'), larga=True)}
+<code>ml.previsoes_teste</code>.</p>
 <p><b>Conclusões</b> (última célula do notebook final):</p>
 {md(saida(nb_final, 'Markdown(f"""', markdown=True))}
 
@@ -336,10 +323,9 @@ e comparado na validação cruzada:</p>
 organização, diagrama do banco, instruções de execução (PostgreSQL local ou Docker) e resultados.</p>
 <div class="lado">
 <div style="width:49%">{shot('evidencias/prints/github_repositorio.png', 'Repositório no GitHub.')}</div>
-<div style="width:49%">{shot('evidencias/prints/github_commits.png', 'Histórico de commits.')}</div>
+<div style="width:49%">{shot('evidencias/prints/github_commits.png', 'Commits mais recentes.')}</div>
 </div>
-{pre(['$ git log --oneline --reverse', *commits], larga=True)}
-{shot('evidencias/prints/print_jupyter_notebook_final.png', 'JupyterLab com o notebook final executado.', 88)}
+{shot('evidencias/prints/print_jupyter_notebook_final.png', 'JupyterLab com o notebook final executado.', 60)}
 
 <h2>Checklist da entrega</h2>
 {checklist}
