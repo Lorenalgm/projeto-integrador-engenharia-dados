@@ -1,0 +1,11 @@
+fonte,etapa,entraram,removidos,restaram,descricao
+localidades,municípios do IBGE,5571,0,5571,Remove município sem UF ou região na resposta da API
+localidades,indicadores do Kaggle,5571,0,5571,"Junção por nome + UF: 5551 municípios com IDHM, 20 ficam sem indicador"
+produtos,catálogo válido,25,0,25,Achata o JSON e remove produto repetido ou sem preço e custo
+clientes,sem duplicatas,1545,45,1500,Mantém uma linha por cliente_id (a mais completa)
+clientes,sem inválidos,1500,0,1500,"Remove cliente sem id, nome, segmento ou data de cadastro válida"
+clientes,município do IBGE,1500,0,1500,Troca cidade + UF pelo código do IBGE: 45 clientes sem cidade ficam com localidade nula
+compras,sem duplicatas,17592,512,17080,Remove linhas repetidas
+compras,sem inválidos,17080,732,16348,"Remove compra sem cliente, data ou valor, com data impossível ou futura, valor negativo ou quantidade fora de 1 a 20"
+compras,integridade referencial,16348,99,16249,Remove compra de cliente fora do cadastro ou de produto fora do catálogo
+compras,sem outliers de preço,16249,157,16092,Remove compra com preço unitário fora de 50% a 110% do preço de tabela

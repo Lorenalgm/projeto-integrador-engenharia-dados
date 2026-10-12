@@ -1,0 +1,13 @@
+{
+  "modelo": "Regressão Logística",
+  "data_de_corte": "2026-03-31",
+  "clientes_no_teste": 200,
+  "taxa_de_churn_no_teste": 0.31,
+  "cv_f1": 0.601,
+  "cv_roc_auc": 0.7773,
+  "accuracy": 0.785,
+  "precision": 0.6557,
+  "recall": 0.6452,
+  "f1": 0.6504,
+  "roc_auc": 0.79
+}

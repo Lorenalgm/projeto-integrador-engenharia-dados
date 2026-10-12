@@ -1,0 +1,24 @@
+feature,grupo,fonte,como é calculada,o que representa e por que ajuda
+idade,Cadastro,Excel,Anos entre data_nascimento e a data de corte,Clientes mais jovens trocam de loja com mais facilidade. Fica nula quando o nascimento é inválido
+segmento_cod,Cadastro,Excel,"Bronze = 0, Prata = 1, Ouro = 2 (encoding ordinal)","Nível no programa de fidelidade. Tem ordem, por isso vira um número só"
+dias_desde_cadastro,Temporal,Excel,Dias entre data_cadastro e a data de corte,Tempo de relacionamento com a loja
+dias_sem_comprar,Temporal,CSV,Dias entre a última compra e a data de corte,"Recência: quanto mais tempo parado, maior a chance de já ter abandonado"
+intervalo_medio_dias,Temporal,CSV,"Dias entre a primeira e a última compra, dividido por (compras - 1)","Ritmo normal do cliente. Com uma compra só, usa os dias desde essa compra"
+atraso_relativo,Temporal,CSV,dias_sem_comprar / intervalo_medio_dias,Compara a pausa atual com o ritmo do próprio cliente: 60 dias parado é normal para uns e alarme para outros
+pct_compras_fim_de_semana,Temporal,CSV + dim_data,Parcela das compras feitas em sábado ou domingo,Hábito de compra (lazer no fim de semana ou rotina durante a semana)
+qtd_compras,Agregação,CSV,Número de compras até o corte,Frequência: volume de relacionamento
+total_gasto,Agregação,CSV,Soma do valor das compras até o corte,Valor monetário do cliente
+ticket_medio,Agregação,CSV,total_gasto / qtd_compras,Tamanho típico de cada compra
+categorias_distintas,Agregação,CSV + JSON,Número de categorias diferentes compradas,Quem compra de vários esportes depende mais da loja
+margem_pct,Agregação,CSV + JSON,"(valor - custo) / valor, somando todas as compras",Usa o custo do catálogo. Margem baixa indica cliente que só compra em promoção
+pct_compras_online,Agregação,CSV,Parcela das compras feitas pelo Site ou pelo App,"Compra online depende de entrega, que pesa mais longe do centro de distribuição"
+qtd_compras_90d,Agregação,CSV,Compras nos 90 dias antes do corte,Atividade recente
+gasto_90d,Agregação,CSV,Valor gasto nos 90 dias antes do corte,Atividade recente em reais
+tendencia_compras,Agregação,CSV,qtd_compras_90d menos as compras dos 90 dias anteriores,Negativa quando o cliente está desacelerando
+compras_por_mes,Agregação,CSV,qtd_compras / meses desde a primeira compra,Frequência ajustada ao tempo de casa
+canal_*,Encoding,CSV,"One-hot do canal mais usado pelo cliente (Loja Física, Site, App)","Canal preferido, sem ordem entre as opções"
+regiao_*,Encoding,API IBGE,One-hot da região do município do cliente (5 colunas),Distância do centro de distribuição. Cliente sem cidade fica com zero nas cinco
+capital,Localidade,Kaggle,1 se o município é capital de estado,Capitais têm mais concorrência e mais oferta de lojas
+populacao_log,Localidade,Kaggle,log10 da população estimada do município,"Porte da cidade, em escala logarítmica por causa de São Paulo"
+idhm,Localidade,Kaggle,Índice de Desenvolvimento Humano Municipal,Indicador social da cidade do cliente
+pib_per_capita,Localidade,Kaggle,"PIB per capita do município, em reais",Poder de compra médio da cidade
