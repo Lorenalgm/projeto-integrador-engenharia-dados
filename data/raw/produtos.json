@@ -1,0 +1,191 @@
+{
+  "loja": "Amapá Esportes",
+  "atualizado_em": "2026-06-30",
+  "categorias": [
+    {
+      "categoria": "Futebol",
+      "produtos": [
+        {
+          "produto_id": "P001",
+          "nome": "Chuteira Society",
+          "preco": 289.9,
+          "custo": 143.81
+        },
+        {
+          "produto_id": "P002",
+          "nome": "Bola de Campo Oficial",
+          "preco": 159.9,
+          "custo": 71.98
+        },
+        {
+          "produto_id": "P003",
+          "nome": "Camisa de Time",
+          "preco": 249.9,
+          "custo": 114.53
+        },
+        {
+          "produto_id": "P004",
+          "nome": "Caneleira",
+          "preco": 49.9,
+          "custo": 34.05
+        }
+      ]
+    },
+    {
+      "categoria": "Corrida",
+      "produtos": [
+        {
+          "produto_id": "P005",
+          "nome": "Tênis de Corrida",
+          "preco": 499.9,
+          "custo": 331.6
+        },
+        {
+          "produto_id": "P006",
+          "nome": "Relógio GPS",
+          "preco": 1299.0,
+          "custo": 618.57
+        },
+        {
+          "produto_id": "P007",
+          "nome": "Shorts Dry Fit",
+          "preco": 79.9,
+          "custo": 55.65
+        },
+        {
+          "produto_id": "P008",
+          "nome": "Cinto de Hidratação",
+          "preco": 119.9,
+          "custo": 60.57
+        }
+      ]
+    },
+    {
+      "categoria": "Musculação",
+      "produtos": [
+        {
+          "produto_id": "P009",
+          "nome": "Par de Halteres 10kg",
+          "preco": 219.9,
+          "custo": 128.28
+        },
+        {
+          "produto_id": "P010",
+          "nome": "Banco Regulável",
+          "preco": 649.0,
+          "custo": 408.78
+        },
+        {
+          "produto_id": "P011",
+          "nome": "Luva de Treino",
+          "preco": 59.9,
+          "custo": 34.48
+        },
+        {
+          "produto_id": "P012",
+          "nome": "Estação de Musculação",
+          "preco": 3499.0,
+          "custo": 2045.5
+        }
+      ]
+    },
+    {
+      "categoria": "Natação",
+      "produtos": [
+        {
+          "produto_id": "P013",
+          "nome": "Óculos de Natação",
+          "preco": 89.9,
+          "custo": 59.86
+        },
+        {
+          "produto_id": "P014",
+          "nome": "Touca de Silicone",
+          "preco": 29.9,
+          "custo": 17.43
+        },
+        {
+          "produto_id": "P015",
+          "nome": "Sunga de Competição",
+          "preco": 139.9,
+          "custo": 72.52
+        }
+      ]
+    },
+    {
+      "categoria": "Ciclismo",
+      "produtos": [
+        {
+          "produto_id": "P016",
+          "nome": "Bicicleta Aro 29",
+          "preco": 2899.0,
+          "custo": 1951.54
+        },
+        {
+          "produto_id": "P017",
+          "nome": "Capacete",
+          "preco": 199.9,
+          "custo": 134.47
+        },
+        {
+          "produto_id": "P018",
+          "nome": "Luva de Ciclismo",
+          "preco": 69.9,
+          "custo": 34.19
+        },
+        {
+          "produto_id": "P019",
+          "nome": "Bermuda Acolchoada",
+          "preco": 159.9,
+          "custo": 74.18
+        }
+      ]
+    },
+    {
+      "categoria": "Basquete",
+      "produtos": [
+        {
+          "produto_id": "P020",
+          "nome": "Bola de Basquete",
+          "preco": 179.9,
+          "custo": 123.7
+        },
+        {
+          "produto_id": "P021",
+          "nome": "Tênis Cano Alto",
+          "preco": 599.9,
+          "custo": 305.34
+        },
+        {
+          "produto_id": "P022",
+          "nome": "Regata de Jogo",
+          "preco": 99.9,
+          "custo": 64.66
+        }
+      ]
+    },
+    {
+      "categoria": "Lutas",
+      "produtos": [
+        {
+          "produto_id": "P023",
+          "nome": "Kimono Jiu-Jitsu",
+          "preco": 389.9,
+          "custo": 261.41
+        },
+        {
+          "produto_id": "P024",
+          "nome": "Luva de Boxe",
+          "preco": 229.9,
+          "custo": 140.85
+        },
+        {
+          "produto_id": "P025",
+          "nome": "Protetor Bucal",
+          "preco": 24.9,
+          "custo": 11.23
+        }
+      ]
+    }
+  ]
+}
